@@ -1,0 +1,49 @@
+# Node modules
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Logs
+*.log
+logs/
+server/logs/
+client/*.log
+
+# Environment files
+.env
+client/.env
+server/.env
+
+# Build directories
+dist/
+build/
+client/dist/
+server/build/
+
+# OS generated files
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
+
+# Cache files
+coverage/
+.vite/
+
+# Temporary files
+tmp/
+temp/
+
+# Package manager lock files (if you want to ignore them)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Application specific
+server/uploads/
+
+# Misc
+Thumbs.db
+ehthumbs.db
+
