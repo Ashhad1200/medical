@@ -480,7 +480,7 @@ const AdminDashboard = () => {
                 Welcome back, {user?.fullName}! 👋
               </h2>
               <p className="text-blue-100">
-                Here's what's happening with your medical store today.
+                Here's what's happening with Moiz Medical Store today.
               </p>
             </div>
             <div className="text-right">

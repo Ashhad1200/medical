@@ -76,7 +76,7 @@ const StartupScreen = ({ onContinue }) => {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Medical Store POS
+            Moiz Medical Store
           </h1>
           <p className="text-gray-600">Starting application...</p>
         </div>
