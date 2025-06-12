@@ -62,16 +62,52 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 // Compression middleware
 app.use(compression());
 
-// CORS configuration
+// CORS configuration - More permissive for mobile and all deployments
 const corsOptions = {
-  origin: [
-    process.env.CLIENT_URL || "http://localhost:5173",
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://medical-orpin-mu.vercel.app",
-    "https://medical-osg7l4ms2-syed-ashhads-projects.vercel.app",
-    /^https:\/\/medical.*\.vercel\.app$/, // Allow any Vercel deployment
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // List of allowed origins
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://medical-orpin-mu.vercel.app",
+      "https://medical-osg7l4ms2-syed-ashhads-projects.vercel.app",
+    ];
+
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow any medical*.vercel.app domain (for all deployments)
+    if (/^https:\/\/medical.*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow any *.vercel.app domain for this project (more permissive)
+    if (
+      /^https:\/\/.*\.vercel\.app$/.test(origin) &&
+      origin.includes("medical")
+    ) {
+      return callback(null, true);
+    }
+
+    // For development, allow localhost with any port
+    if (/^http:\/\/localhost:\d+$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow the environment CLIENT_URL if set
+    if (process.env.CLIENT_URL && origin === process.env.CLIENT_URL) {
+      return callback(null, true);
+    }
+
+    // For production, be more restrictive but log the blocked origin
+    console.log(`CORS blocked origin: ${origin}`);
+    callback(new Error("Not allowed by CORS"), false);
+  },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
@@ -82,7 +118,10 @@ const corsOptions = {
     "Accept",
     "Authorization",
     "Cache-Control",
+    "X-Forwarded-For",
+    "X-Real-IP",
   ],
+  exposedHeaders: ["X-Total-Count", "X-RateLimit-Remaining"],
 };
 app.use(cors(corsOptions));
 
