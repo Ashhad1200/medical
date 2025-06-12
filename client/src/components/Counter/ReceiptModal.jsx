@@ -108,8 +108,8 @@ const ReceiptModal = ({ show, onClose, orderId, orderData }) => {
     let text = "";
 
     text += "========================================\n";
-    text += "              MedStore Plus             \n";
-    text += "        Your Trusted Medical Store     \n";
+    text += "          Moiz Medical Store          \n";
+    text += "          Moiz Medical Store          \n";
     text += "========================================\n";
     text += "123 Medical Street, Health City\n";
     text += "Phone: +92-300-1234567\n";
@@ -213,8 +213,10 @@ const ReceiptModal = ({ show, onClose, orderId, orderData }) => {
         <div className="p-6" id="receipt-content">
           {/* Store Header */}
           <div className="text-center mb-6 border-b border-gray-200 pb-4">
-            <h1 className="text-xl font-bold text-gray-900">MedStore Plus</h1>
-            <p className="text-sm text-gray-600">Your Trusted Medical Store</p>
+            <h1 className="text-xl font-bold text-gray-900">
+              Moiz Medical Store
+            </h1>
+            <p className="text-sm text-gray-600">Moiz Medical Store</p>
             <p className="text-xs text-gray-500 mt-1">
               123 Medical Street, Health City
               <br />

@@ -31,7 +31,7 @@ window.addEventListener("unhandledrejection", (e) => {
   console.error("Unhandled promise rejection:", e.reason);
 });
 
-console.log("Starting Medical Store POS System...");
+console.log("Starting Moiz Medical Store System...");
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>

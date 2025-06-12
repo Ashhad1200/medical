@@ -205,7 +205,7 @@ const DashboardLayout = () => {
         } fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}
       >
         <div className="flex items-center justify-center h-16 bg-blue-600">
-          <h1 className="text-xl font-bold text-white">Medical POS</h1>
+          <h1 className="text-xl font-bold text-white">Moiz Medical Store</h1>
         </div>
 
         {/* User Info */}
@@ -308,7 +308,9 @@ const DashboardLayout = () => {
                 />
               </svg>
             </button>
-            <h1 className="text-lg font-semibold text-gray-900">Medical POS</h1>
+            <h1 className="text-lg font-semibold text-gray-900">
+              Moiz Medical Store
+            </h1>
             <div className="w-10"></div>
           </div>
         </div>
