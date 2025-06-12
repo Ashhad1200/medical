@@ -68,6 +68,9 @@ const corsOptions = {
     process.env.CLIENT_URL || "http://localhost:5173",
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://medical-orpin-mu.vercel.app",
+    "https://medical-osg7l4ms2-syed-ashhads-projects.vercel.app",
+    /^https:\/\/medical.*\.vercel\.app$/, // Allow any Vercel deployment
   ],
   credentials: true,
   optionsSuccessStatus: 200,
