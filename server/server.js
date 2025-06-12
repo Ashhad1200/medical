@@ -106,6 +106,15 @@ const corsOptions = {
 
     // For production, be more restrictive but log the blocked origin
     console.log(`CORS blocked origin: ${origin}`);
+
+    // TEMPORARY: Allow all origins for debugging (remove after testing)
+    if (process.env.NODE_ENV === "production") {
+      console.log(
+        `⚠️  TEMPORARY: Allowing origin ${origin} for mobile debugging`
+      );
+      return callback(null, true);
+    }
+
     callback(new Error("Not allowed by CORS"), false);
   },
   credentials: true,
