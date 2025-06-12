@@ -142,7 +142,7 @@ class MedicalPosApp {
     this.app.get("/health", (req, res) => {
       res.json({
         success: true,
-        message: "Medical POS API is running",
+        message: "Moiz Medical Store API is running",
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
         environment: config.env,
@@ -155,7 +155,7 @@ class MedicalPosApp {
     this.app.get("/api", (req, res) => {
       res.json({
         success: true,
-        message: "Medical Store Inventory & POS API",
+        message: "Moiz Medical Store Inventory & POS API",
         version: "1.0.0",
         documentation: "/api/docs",
         endpoints: {
@@ -201,7 +201,7 @@ class MedicalPosApp {
       // Start server
       const server = this.app.listen(config.port, () => {
         console.log(`
-🚀 Medical POS Server Started Successfully!
+🚀 Moiz Medical Store Server Started Successfully!
 🌐 Environment: ${config.env}
 📍 Port: ${config.port}
 🔗 Health Check: http://localhost:${config.port}/health

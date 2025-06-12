@@ -1,7 +1,7 @@
 {
-  "name": "medical-pos-server",
+  "name": "moiz-medical-store-server",
   "version": "1.0.0",
-  "description": "Medical POS System Backend",
+  "description": "Moiz Medical Store Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

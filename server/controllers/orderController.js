@@ -577,7 +577,7 @@ const getOrderPdf = async (req, res) => {
     doc
       .fontSize(20)
       .font("Helvetica-Bold")
-      .text("Medical Store Receipt", 50, 50);
+      .text("Moiz Medical Store Receipt", 50, 50);
     doc
       .fontSize(12)
       .font("Helvetica")

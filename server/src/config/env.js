@@ -14,7 +14,7 @@ const envSchema = Joi.object({
   JWT_SECRET: Joi.string().min(32).required(),
   JWT_EXPIRES_IN: Joi.string().default("7d"),
   CLIENT_URL: Joi.string().uri().default("http://localhost:5173"),
-  COMPANY_NAME: Joi.string().default("Medical Store POS"),
+  COMPANY_NAME: Joi.string().default("Moiz Medical Store POS"),
   COMPANY_ADDRESS: Joi.string().default("123 Medical Street"),
   COMPANY_PHONE: Joi.string().default("+1234567890"),
   COMPANY_EMAIL: Joi.string().email().default("info@medicalstore.com"),
