@@ -19,7 +19,7 @@ app.use("/api/orders", orderRoutes);
 
 // Connect to MongoDB
 mongoose
-  .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/medeical", {
+  .connect(process.env.MONGODB_URI || "mongodb://localhost:27017/medical", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
