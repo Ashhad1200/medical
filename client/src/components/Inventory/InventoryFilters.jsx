@@ -14,6 +14,7 @@ const InventoryFilters = ({
     { value: "all", label: "All Items", count: null },
     { value: "in-stock", label: "In Stock", count: null },
     { value: "low-stock", label: "Low Stock", count: null },
+    { value: "out-of-stock", label: "Out of Stock", count: null },
     { value: "expired", label: "Expired", count: null },
     { value: "expiring-soon", label: "Expiring Soon", count: null },
   ];
@@ -24,7 +25,6 @@ const InventoryFilters = ({
     { value: "retailPrice", label: "Price" },
     { value: "expiryDate", label: "Expiry Date" },
     { value: "manufacturer", label: "Manufacturer" },
-    { value: "category", label: "Category" },
     { value: "createdAt", label: "Date Added" },
   ];
 

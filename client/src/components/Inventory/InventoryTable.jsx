@@ -165,9 +165,6 @@ const TableRow = ({
               {medicine.manufacturer}
             </p>
             <div className="flex items-center space-x-2 mt-1">
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                {medicine.category || "General"}
-              </span>
               <span className="text-xs text-gray-500">
                 Batch: {medicine.batchNumber}
               </span>
@@ -323,6 +320,9 @@ const InventoryTable = ({
   updateStockMutation,
   deleteMedicineMutation,
   pagination,
+  onPageChange,
+  onNextPage,
+  onPrevPage,
 }) => {
   if (isLoading) {
     return (
@@ -415,17 +415,89 @@ const InventoryTable = ({
             </div>
             <div className="flex items-center space-x-2">
               <button
+                onClick={onPrevPage}
                 disabled={!pagination.hasPrevPage}
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Previous
               </button>
-              <span className="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded">
-                {pagination.currentPage} of {pagination.totalPages}
-              </span>
+
+              {/* Page Numbers */}
+              <div className="flex items-center space-x-1">
+                {(() => {
+                  const pages = [];
+                  const currentPage = pagination.currentPage;
+                  const totalPages = pagination.totalPages;
+
+                  // Always show first page
+                  if (currentPage > 3) {
+                    pages.push(
+                      <button
+                        key={1}
+                        onClick={() => onPageChange(1)}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      >
+                        1
+                      </button>
+                    );
+                    if (currentPage > 4) {
+                      pages.push(
+                        <span key="ellipsis1" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                  }
+
+                  // Show pages around current page
+                  for (
+                    let i = Math.max(1, currentPage - 2);
+                    i <= Math.min(totalPages, currentPage + 2);
+                    i++
+                  ) {
+                    pages.push(
+                      <button
+                        key={i}
+                        onClick={() => onPageChange(i)}
+                        className={`px-3 py-1 text-sm rounded transition-colors ${
+                          i === currentPage
+                            ? "bg-blue-100 text-blue-800 border border-blue-200"
+                            : "border border-gray-300 hover:bg-gray-50"
+                        }`}
+                      >
+                        {i}
+                      </button>
+                    );
+                  }
+
+                  // Always show last page
+                  if (currentPage < totalPages - 2) {
+                    if (currentPage < totalPages - 3) {
+                      pages.push(
+                        <span key="ellipsis2" className="px-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    pages.push(
+                      <button
+                        key={totalPages}
+                        onClick={() => onPageChange(totalPages)}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                      >
+                        {totalPages}
+                      </button>
+                    );
+                  }
+
+                  return pages;
+                })()}
+              </div>
+
               <button
+                onClick={onNextPage}
                 disabled={!pagination.hasNextPage}
-                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 Next
               </button>

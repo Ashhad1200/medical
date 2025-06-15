@@ -174,7 +174,6 @@ const InventoryStats = ({ data, isLoading }) => {
 
   // Calculate totals for additional metrics
   const totalValue = data?.totalValue || 0;
-  const categories = data?.categoriesCount || 0;
 
   return (
     <div className="space-y-6">
@@ -230,9 +229,11 @@ const InventoryStats = ({ data, isLoading }) => {
         <div className="bg-white rounded-xl shadow-sm border p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Categories</p>
-              <p className="text-2xl font-bold text-gray-900">{categories}</p>
-              <p className="text-xs text-gray-500 mt-1">Medicine types</p>
+              <p className="text-sm font-medium text-gray-600">Out of Stock</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {data?.outOfStock || 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Items to restock</p>
             </div>
             <div className="p-3 bg-indigo-100 rounded-xl">
               <svg
@@ -245,7 +246,7 @@ const InventoryStats = ({ data, isLoading }) => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                 />
               </svg>
             </div>

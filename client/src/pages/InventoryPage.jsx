@@ -29,6 +29,8 @@ const InventoryPage = () => {
   const [viewMode, setViewMode] = useState("table"); // table or grid
   const [editingMedicine, setEditingMedicine] = useState(null);
   const [importFile, setImportFile] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20); // Fixed items per page
 
   const [newMedicine, setNewMedicine] = useState({
     name: "",
@@ -49,6 +51,8 @@ const InventoryPage = () => {
     const apiFilters = {
       sortBy,
       sortOrder,
+      page: currentPage,
+      limit: itemsPerPage,
     };
 
     if (searchQuery.length >= 2) {
@@ -59,6 +63,9 @@ const InventoryPage = () => {
       switch (filterStatus) {
         case "low-stock":
           apiFilters.lowStock = true;
+          break;
+        case "out-of-stock":
+          apiFilters.outOfStock = true;
           break;
         case "expired":
           // For expired, we need to include expired medicines from backend
@@ -78,7 +85,7 @@ const InventoryPage = () => {
     }
 
     return apiFilters;
-  }, [searchQuery, filterStatus, sortBy, sortOrder]);
+  }, [searchQuery, filterStatus, sortBy, sortOrder, currentPage, itemsPerPage]);
 
   // React Query hooks
   const {
@@ -128,9 +135,18 @@ const InventoryPage = () => {
           });
           break;
         case "low-stock":
-          // Show medicines with low stock
+          // Show medicines with low stock (but not zero)
           filtered = filtered.filter((medicine) => {
-            return medicine.quantity <= (medicine.minStockLevel || 10);
+            return (
+              medicine.quantity > 0 &&
+              medicine.quantity <= (medicine.minStockLevel || 10)
+            );
+          });
+          break;
+        case "out-of-stock":
+          // Show medicines that are completely out of stock
+          filtered = filtered.filter((medicine) => {
+            return medicine.quantity === 0;
           });
           break;
         case "in-stock":
@@ -262,6 +278,40 @@ const InventoryPage = () => {
       description: "",
       minStockLevel: 10,
     });
+  };
+
+  // Pagination handlers
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+  };
+
+  const handleNextPage = () => {
+    if (pagination.hasNextPage) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (pagination.hasPrevPage) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Reset page when filters change
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    setCurrentPage(1);
+  };
+
+  const handleFilterStatusChange = (status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (field, order) => {
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
   };
 
   // Error state
@@ -415,13 +465,13 @@ const InventoryPage = () => {
         {/* Filters Section */}
         <InventoryFilters
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          setSearchQuery={handleSearchChange}
           filterStatus={filterStatus}
-          setFilterStatus={setFilterStatus}
+          setFilterStatus={handleFilterStatusChange}
           sortBy={sortBy}
-          setSortBy={setSortBy}
+          setSortBy={(field) => handleSortChange(field, sortOrder)}
           sortOrder={sortOrder}
-          setSortOrder={setSortOrder}
+          setSortOrder={(order) => handleSortChange(sortBy, order)}
         />
 
         {/* Main Content */}
@@ -436,6 +486,9 @@ const InventoryPage = () => {
           updateStockMutation={updateStockMutation}
           deleteMedicineMutation={deleteMedicineMutation}
           pagination={pagination}
+          onPageChange={handlePageChange}
+          onNextPage={handleNextPage}
+          onPrevPage={handlePrevPage}
         />
       </div>
 

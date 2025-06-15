@@ -10,22 +10,6 @@ const AddMedicineModal = ({
 }) => {
   if (!show) return null;
 
-  const categories = [
-    "Analgesics",
-    "Antibiotics",
-    "Antihistamines",
-    "Antacids",
-    "Antiseptics",
-    "Cardiovascular",
-    "Diabetes",
-    "Gastric",
-    "Pain Relief",
-    "Respiratory",
-    "Vitamins",
-    "Skin Care",
-    "Other",
-  ];
-
   const handleInputChange = (field, value) => {
     setNewMedicine((prev) => ({
       ...prev,
@@ -126,42 +110,20 @@ const AddMedicineModal = ({
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Batch Number *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={newMedicine.batchNumber}
-                        onChange={(e) =>
-                          handleInputChange("batchNumber", e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="Batch number"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Category *
-                      </label>
-                      <select
-                        value={newMedicine.category}
-                        onChange={(e) =>
-                          handleInputChange("category", e.target.value)
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                      >
-                        <option value="">Select Category</option>
-                        {categories.map((category) => (
-                          <option key={category} value={category}>
-                            {category}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Batch Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newMedicine.batchNumber}
+                      onChange={(e) =>
+                        handleInputChange("batchNumber", e.target.value)
+                      }
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      placeholder="Batch number"
+                    />
                   </div>
 
                   <div>

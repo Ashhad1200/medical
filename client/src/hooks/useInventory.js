@@ -67,7 +67,7 @@ export const useInventoryStats = () => {
     queryFn: async () => {
       const [allMedicines, lowStock] = await Promise.all([
         inventoryServices
-          .getAll({ includeExpired: true })
+          .getAll({ includeExpired: true, limit: 1000 }) // Fetch all medicines
           .then((res) => res.data),
         inventoryServices.getLowStock().then((res) => res.data),
       ]);
@@ -87,17 +87,10 @@ export const useInventoryStats = () => {
         (med) => med.quantity > 0 && new Date(med.expiryDate) >= today
       );
 
-      // Calculate total inventory value
+      // Calculate total inventory value from all medicines
       const totalValue = medicines.reduce((total, med) => {
         return total + (med.quantity || 0) * (med.tradePrice || 0);
       }, 0);
-
-      // Count unique categories
-      const categories = new Set(
-        medicines
-          .filter((med) => med.category)
-          .map((med) => med.category.toLowerCase())
-      );
 
       // Calculate expiring soon (within 30 days)
       const thirtyDaysFromNow = new Date();
@@ -115,7 +108,6 @@ export const useInventoryStats = () => {
         inStock: validMedicines.length,
         expiringSoon,
         totalValue: Math.round(totalValue * 100) / 100, // Round to 2 decimal places
-        categoriesCount: categories.size,
         outOfStock: medicines.filter((med) => (med.quantity || 0) === 0).length,
         averageValue:
           medicines.length > 0
