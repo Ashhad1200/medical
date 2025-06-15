@@ -3,6 +3,7 @@ const router = express.Router();
 const { auth, checkRole } = require("../middleware/auth");
 const {
   getAllMedicines,
+  getInventoryStats,
   getMedicine,
   createMedicine,
   updateMedicine,
@@ -31,6 +32,13 @@ router.get("/test", (req, res) => {
 
 // Search medicines route (must be before /:id route)
 router.get("/search", searchMedicines);
+
+// Get inventory statistics
+router.get(
+  "/stats",
+  checkRole(["admin", "warehouse", "counter"]),
+  getInventoryStats
+);
 
 // Get all medicines
 router.get("/", getAllMedicines);

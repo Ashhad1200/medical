@@ -51,11 +51,23 @@ const supplierSchema = new mongoose.Schema(
         required: [true, "Postal code is required"],
         trim: true,
       },
+      pincode: {
+        type: String,
+        trim: true,
+      },
       country: {
         type: String,
         default: "India",
         trim: true,
       },
+    },
+    website: {
+      type: String,
+      trim: true,
+      match: [
+        /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/,
+        "Please enter a valid website URL",
+      ],
     },
     gstNumber: {
       type: String,
@@ -111,6 +123,8 @@ const supplierSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
   }
 );
 
@@ -120,6 +134,8 @@ supplierSchema.index({ email: 1 });
 supplierSchema.index({ isActive: 1 });
 supplierSchema.index({ "address.city": 1 });
 supplierSchema.index({ "address.state": 1 });
+supplierSchema.index({ createdAt: -1 });
+supplierSchema.index({ totalOrders: -1 });
 
 // Virtual for full address
 supplierSchema.virtual("fullAddress").get(function () {
@@ -136,6 +152,11 @@ supplierSchema.virtual("availableCredit").get(function () {
 supplierSchema.virtual("creditUtilization").get(function () {
   if (this.creditLimit === 0) return 0;
   return Math.round((this.currentBalance / this.creditLimit) * 100);
+});
+
+// Virtual for status display
+supplierSchema.virtual("statusDisplay").get(function () {
+  return this.isActive ? "Active" : "Inactive";
 });
 
 // Static method to find active suppliers
@@ -205,5 +226,15 @@ supplierSchema.methods.updateRating = function (newRating) {
   }
   throw new Error("Rating must be between 1 and 5");
 };
+
+// Pre-save middleware to ensure pincode matches postalCode if both are provided
+supplierSchema.pre("save", function (next) {
+  if (this.address.pincode && !this.address.postalCode) {
+    this.address.postalCode = this.address.pincode;
+  } else if (this.address.postalCode && !this.address.pincode) {
+    this.address.pincode = this.address.postalCode;
+  }
+  next();
+});
 
 module.exports = mongoose.model("Supplier", supplierSchema);
