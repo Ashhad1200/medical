@@ -1,4 +1,5 @@
 const Medicine = require("../models/Medicine");
+const xlsx = require("xlsx");
 
 // Get all medicines with enhanced filtering and pagination
 const getAllMedicines = async (req, res) => {
@@ -251,10 +252,26 @@ const createMedicine = async (req, res) => {
   try {
     const medicineData = req.body;
 
-    // Additional validation for required fields
-    const requiredFields = ["name", "manufacturer", "sellingPrice", "quantity"];
+    // Accept legacy aliases: retailPrice -> sellingPrice, tradePrice -> costPrice
+    // Move aliases to primary field names if provided
+    if (medicineData.retailPrice && !medicineData.sellingPrice) {
+      medicineData.sellingPrice = medicineData.retailPrice;
+    }
+    if (medicineData.tradePrice && !medicineData.costPrice) {
+      medicineData.costPrice = medicineData.tradePrice;
+    }
+
+    // Enhanced validation: ensure name, manufacturer, sellingPrice, costPrice, quantity
+    const requiredFields = [
+      "name",
+      "manufacturer",
+      "sellingPrice",
+      "costPrice",
+      "quantity",
+    ];
+
     const missingFields = requiredFields.filter(
-      (field) => !medicineData[field]
+      (field) => medicineData[field] === undefined || medicineData[field] === ""
     );
 
     if (missingFields.length > 0) {
@@ -626,11 +643,88 @@ const updateStock = async (req, res) => {
 // Bulk import medicines
 const bulkImport = async (req, res) => {
   try {
-    // This would handle CSV/Excel file upload and processing
-    // For now, return a placeholder response
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    // Parse workbook from buffer
+    const workbook = xlsx.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) {
+      return res.status(400).json({
+        success: false,
+        message: "Uploaded file is empty",
+      });
+    }
+
+    const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], {
+      defval: "", // keep empty cells as empty string
+    });
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Uploaded sheet has no rows",
+      });
+    }
+
+    // Map and validate rows
+    const docs = [];
+    const errors = [];
+
+    rows.forEach((row, idx) => {
+      const name = row.name || row.Name || "";
+      const manufacturer = row.manufacturer || row.Manufacturer || "";
+      const quantity = Number(row.quantity || row.Quantity || 0);
+      const sellingPrice = parseFloat(
+        row.sellingPrice || row.retailPrice || row.Price || 0
+      );
+      const costPrice = parseFloat(
+        row.costPrice || row.tradePrice || row.Cost || 0
+      );
+      const expiryDateRaw =
+        row.expiryDate || row.ExpiryDate || row.expiry || "";
+
+      if (!name || !manufacturer || !sellingPrice || !costPrice || !quantity) {
+        errors.push(`Row ${idx + 2} missing required fields`); // +2 accounts for header & 0-index
+        return;
+      }
+
+      const expiryDate = expiryDateRaw ? new Date(expiryDateRaw) : undefined;
+
+      docs.push({
+        name,
+        manufacturer,
+        quantity,
+        sellingPrice,
+        costPrice,
+        expiryDate,
+        batchNumber: row.batchNumber || row.BatchNumber || "",
+        genericName: row.genericName || row.GenericName || "",
+        category: row.category || row.Category || "",
+        gstPerUnit: Number(row.gstPerUnit || row.GST || 0),
+        lowStockThreshold: Number(row.lowStockThreshold || row.Reorder || 10),
+      });
+    });
+
+    if (errors.length) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation errors in uploaded file",
+        errors,
+      });
+    }
+
+    // Insert documents; use ordered:false to continue on duplicates
+    const result = await Medicine.insertMany(docs, { ordered: false });
+
     res.json({
       success: true,
-      message: "Bulk import functionality not yet implemented",
+      message: "Medicines imported successfully",
+      data: { imported: result.length },
     });
   } catch (error) {
     console.error("Bulk import error:", error);
@@ -648,12 +742,42 @@ const bulkImport = async (req, res) => {
 // Export inventory
 const exportInventory = async (req, res) => {
   try {
-    // This would handle inventory export to CSV/Excel
-    // For now, return a placeholder response
-    res.json({
-      success: true,
-      message: "Export functionality not yet implemented",
-    });
+    const medicines = await Medicine.find().lean();
+
+    if (!medicines || medicines.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No medicines found to export",
+      });
+    }
+
+    // Convert to plain objects suitable for Excel
+    const rows = medicines.map((m) => ({
+      name: m.name,
+      manufacturer: m.manufacturer,
+      batchNumber: m.batchNumber,
+      quantity: m.quantity,
+      sellingPrice: m.sellingPrice,
+      costPrice: m.costPrice,
+      gstPerUnit: m.gstPerUnit,
+      expiryDate: m.expiryDate ? m.expiryDate.toISOString().split("T")[0] : "",
+      category: m.category,
+    }));
+
+    const ws = xlsx.utils.json_to_sheet(rows);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, "Inventory");
+
+    const buf = xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    const filename = `inventory-${new Date().toISOString().split("T")[0]}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(buf);
   } catch (error) {
     console.error("Export inventory error:", error);
     res.status(500).json({

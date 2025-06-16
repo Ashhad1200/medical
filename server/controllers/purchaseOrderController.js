@@ -135,7 +135,12 @@ const createPurchaseOrder = async (req, res) => {
     const taxAmount = (subtotal * parseFloat(taxPercent)) / 100;
     const total = subtotal + taxAmount - parseFloat(discountAmount);
 
+    // Generate order number first to satisfy required field
+    const countExisting = await PurchaseOrder.countDocuments();
+    const orderNumber = `PO-${String(countExisting + 1).padStart(6, "0")}`;
+
     const purchaseOrder = new PurchaseOrder({
+      orderNumber,
       supplierId,
       supplierName: supplier.name,
       items: processedItems,
