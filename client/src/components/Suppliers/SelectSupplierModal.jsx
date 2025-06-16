@@ -5,6 +5,7 @@ const SelectSupplierModal = ({
   onClose,
   suppliers,
   onSelect,
+  onFinalize,
   orderItems,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -44,17 +45,9 @@ const SelectSupplierModal = ({
 
     const supplier = suppliers.find((s) => s._id === selectedSupplierId);
 
-    // Save order to history
-    saveOrderToHistory(supplier);
-
-    // Show success message
-    const orderTotal = (calculateOrderTotal() * 1.18).toFixed(2);
-    const confirmMessage = `Order finalized successfully!\n\nSupplier: ${supplier.name}\nItems: ${orderItems.length}\nTotal: Rs. ${orderTotal}\n\nOrder has been saved to inventory orders history.`;
-
-    alert(confirmMessage);
-
-    // Call the onSelect to proceed with the original workflow
-    onSelect(supplier);
+    if (onFinalize) {
+      onFinalize(supplier);
+    }
   };
 
   const saveOrderToHistory = (supplier) => {
@@ -81,7 +74,7 @@ const SelectSupplierModal = ({
       })),
       subtotal: calculateOrderTotal(),
       tax: calculateOrderTotal() * 0.18,
-      grandTotal: calculateOrderTotal() * 1.18,
+      grandTotal: calculateOrderTotal(),
       notes: `Stock replenishment order - ${orderItems.length} items`,
     };
 
@@ -158,8 +151,6 @@ const SelectSupplierModal = ({
   const generateReceiptHTML = (supplier) => {
     const orderId = generateOrderId();
     const total = calculateOrderTotal();
-    const tax = total * 0.18;
-    const grandTotal = total + tax;
 
     return `
       <!DOCTYPE html>
@@ -339,16 +330,12 @@ const SelectSupplierModal = ({
             <span>Rs. ${total.toFixed(2)}</span>
           </div>
           <div class="summary-row">
-            <span>Tax (GST 18%):</span>
-            <span>Rs. ${tax.toFixed(2)}</span>
-          </div>
-          <div class="summary-row">
             <span>Discount:</span>
             <span>Rs. 0.00</span>
           </div>
           <div class="summary-row total-row">
             <span>Grand Total:</span>
-            <span>Rs. ${grandTotal.toFixed(2)}</span>
+            <span>Rs. ${total.toFixed(2)}</span>
           </div>
         </div>
 
@@ -368,8 +355,6 @@ const SelectSupplierModal = ({
   const generateSlipContent = (supplier) => {
     const orderId = generateOrderId();
     const total = calculateOrderTotal();
-    const tax = total * 0.18;
-    const grandTotal = total + tax;
 
     return `
 PURCHASE ORDER SLIP
@@ -405,9 +390,8 @@ ${index + 1}. ${item.name}
 ORDER SUMMARY
 -------------
 Subtotal: Rs. ${total.toFixed(2)}
-Tax (GST 18%): Rs. ${tax.toFixed(2)}
 Discount: Rs. 0.00
-Grand Total: Rs. ${grandTotal.toFixed(2)}
+Grand Total: Rs. ${total.toFixed(2)}
 
 PAYMENT TERMS
 -------------
@@ -695,17 +679,9 @@ ${formatDate(new Date())} ${new Date().toLocaleTimeString()}
                         Rs. {calculateOrderTotal().toFixed(2)}
                       </span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Tax (18%):</span>
-                      <span className="font-medium">
-                        Rs. {(calculateOrderTotal() * 0.18).toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-t border-green-200 pt-1 font-semibold">
+                    <div className="flex justify-between border-t border-green-200 pt-2 text-lg font-semibold">
                       <span>Total:</span>
-                      <span>
-                        Rs. {(calculateOrderTotal() * 1.18).toFixed(2)}
-                      </span>
+                      <span>Rs. {calculateOrderTotal().toFixed(2)}</span>
                     </div>
                   </div>
                   <div className="mt-2 pt-2 border-t border-green-200 text-center">
@@ -713,9 +689,34 @@ ${formatDate(new Date())} ${new Date().toLocaleTimeString()}
                       Ready to finalize order
                     </div>
                     <div className="text-xs text-green-600 mt-1">
-                      Print, download, or finalize purchase order
+                      Print, download, or finalize purchase order (no tax)
                     </div>
                   </div>
+                </div>
+
+                {/* Quick Action Buttons (visible without scrolling) */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={handleDownloadSlip}
+                    disabled={!selectedSupplierId || orderItems.length === 0}
+                    className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    📄 Download Slip
+                  </button>
+                  <button
+                    onClick={handlePrintReceipt}
+                    disabled={!selectedSupplierId || orderItems.length === 0}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    🖨️ Print
+                  </button>
+                  <button
+                    onClick={handleFinalizeOrder}
+                    disabled={!selectedSupplierId || orderItems.length === 0}
+                    className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  >
+                    ✅ Finalize
+                  </button>
                 </div>
               </div>
             )}
@@ -741,50 +742,12 @@ ${formatDate(new Date())} ${new Date().toLocaleTimeString()}
             )}
           </div>
           <div className="flex items-center space-x-2">
-            {/* Receipt Options - Only show when supplier is selected */}
-            {selectedSupplierId && orderItems.length > 0 && (
-              <>
-                <button
-                  onClick={handleDownloadSlip}
-                  className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                  title="Download order slip as text file"
-                >
-                  📄 Download Slip
-                </button>
-                <button
-                  onClick={handlePrintReceipt}
-                  className="px-3 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
-                  title="Print receipt"
-                >
-                  🖨️ Print Receipt
-                </button>
-              </>
-            )}
-
             <button
               onClick={onClose}
               className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             >
               Cancel
             </button>
-
-            {/* Finalize Order Button - Primary action */}
-            {selectedSupplierId && orderItems.length > 0 ? (
-              <button
-                onClick={handleFinalizeOrder}
-                className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 border border-transparent rounded-lg hover:from-blue-700 hover:to-blue-800 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg transition-all duration-200 transform hover:scale-105"
-              >
-                ✅ Finalize Order
-              </button>
-            ) : (
-              <button
-                onClick={handleSelect}
-                disabled={!selectedSupplierId}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Continue with Supplier
-              </button>
-            )}
           </div>
         </div>
       </div>

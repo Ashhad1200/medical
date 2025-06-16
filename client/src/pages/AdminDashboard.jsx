@@ -175,13 +175,19 @@ const AdminDashboard = () => {
       };
 
       // Fetch multiple data sources in parallel
-      const [orderDashboardRes, medicinesRes, statsRes, activitiesRes] =
-        await Promise.all([
-          api.get("/orders/dashboard", { headers }),
-          api.get("/medicines?limit=1000", { headers }),
-          api.get("/dashboard/stats", { headers }),
-          api.get("/dashboard/activities", { headers }),
-        ]);
+      const [
+        orderDashboardRes,
+        medicinesRes,
+        statsRes,
+        activitiesRes,
+        analyticsRes,
+      ] = await Promise.all([
+        api.get("/orders/dashboard", { headers }),
+        api.get("/medicines?limit=1000", { headers }),
+        api.get("/dashboard/stats", { headers }),
+        api.get("/dashboard/activities", { headers }),
+        api.get(`/dashboard/analytics?period=7days`, { headers }),
+      ]);
 
       // Process and combine data
       const orderData = orderDashboardRes.data.data;
@@ -210,16 +216,28 @@ const AdminDashboard = () => {
           : 0,
       };
 
-      // Generate sales chart data for the last 7 days
-      const salesChart = Array.from({ length: 7 }, (_, i) => {
-        const date = subDays(new Date(), 6 - i);
-        return {
-          date: format(date, "MMM dd"),
-          sales: Math.random() * 10000 + 5000, // Placeholder - replace with real data
-          orders: Math.floor(Math.random() * 50 + 20), // Placeholder
-          profit: Math.random() * 3000 + 1000, // Placeholder
-        };
-      });
+      // Transform backend sales analytics into chart-friendly structure
+      const backendSalesData = analyticsRes?.data?.data?.salesData || [];
+
+      const salesChart = backendSalesData.map((item) => ({
+        date: format(new Date(item.date), "MMM dd"),
+        sales: item.totalSales || 0,
+        orders: item.totalOrders || 0,
+        profit: item.totalProfit || 0,
+      }));
+
+      // Fallback if no data returned
+      if (salesChart.length === 0) {
+        for (let i = 6; i >= 0; i--) {
+          const date = subDays(new Date(), 6 - i);
+          salesChart.push({
+            date: format(date, "MMM dd"),
+            sales: 0,
+            orders: 0,
+            profit: 0,
+          });
+        }
+      }
 
       // System alerts
       const systemAlerts = [];
@@ -244,7 +262,10 @@ const AdminDashboard = () => {
       setDashboardData({
         stats,
         recentOrders: orderData.recentOrders || [],
-        topMedicines: medicinesData.medicines?.slice(0, 5) || [],
+        topMedicines:
+          analyticsRes?.data?.data?.topMedicines?.slice(0, 5) ||
+          medicinesData.medicines?.slice(0, 5) ||
+          [],
         salesChart,
         lowStockMedicines: orderData.lowStockMedicines || [],
         recentActivities: activities.activities || [],

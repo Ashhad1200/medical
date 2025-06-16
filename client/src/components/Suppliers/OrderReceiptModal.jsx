@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 
 const OrderReceiptModal = ({
   show,
@@ -8,10 +8,9 @@ const OrderReceiptModal = ({
   items,
   total,
   onPrintComplete,
+  autoPrint = false,
 }) => {
   const printRef = useRef();
-
-  if (!show) return null;
 
   const handlePrint = () => {
     const printContent = printRef.current;
@@ -82,6 +81,18 @@ const OrderReceiptModal = ({
     document.body.innerHTML = originalContents;
     window.location.reload(); // Reload to restore the original page
   };
+
+  useEffect(() => {
+    if (autoPrint && show) {
+      setTimeout(() => {
+        handlePrint();
+        if (onPrintComplete) onPrintComplete();
+      }, 500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPrint, show]);
+
+  if (!show) return null;
 
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString("en-IN", {

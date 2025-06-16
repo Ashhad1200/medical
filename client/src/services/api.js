@@ -52,7 +52,8 @@ export const medicineServices = {
   create: (data) => api.post("/medicines", data),
   update: (id, data) => api.put(`/medicines/${id}`, data),
   delete: (id) => api.delete(`/medicines/${id}`),
-  search: (term) => api.get("/medicines", { params: { term } }),
+  search: (q, limit = 10) =>
+    api.get(`/medicines/search`, { params: { q, limit } }),
 };
 
 // ===================== ORDER SERVICES =====================
@@ -63,7 +64,7 @@ export const orderServices = {
   update: (id, data) => api.put(`/orders/${id}`, data),
   delete: (id) => api.delete(`/orders/${id}`),
   getDashboardData: () => api.get("/orders/dashboard"),
-  getPdf: (id) => api.get(`/orders/${id}/pdf`, { responseType: "blob" }),
+  getPdf: (id) => api.get(`/orders/${id}/receipt`, { responseType: "blob" }),
   getByDateRange: (date) => api.get("/orders", { params: { date } }),
 };
 

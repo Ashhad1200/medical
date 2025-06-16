@@ -51,6 +51,29 @@ export const useOrderDashboard = () => {
   });
 };
 
+// ===================== DASHBOARD SUMMARY HOOK =====================
+
+export const useDashboardData = () => {
+  return useQuery({
+    queryKey: orderKeys.dashboard(),
+    queryFn: () => orderServices.getDashboardData().then((res) => res.data),
+    select: (data) => {
+      // Flatten and map backend response to front-end friendly structure
+      return {
+        totalSales: data?.monthSales?.totalRevenue || 0,
+        totalOrders: data?.monthSales?.totalOrders || 0,
+        totalProfit: data?.monthSales?.totalProfit || 0,
+        lowStockItems: data?.lowStockMedicines?.length || 0,
+        recentOrders: data?.recentOrders || [],
+        // Provide original in case other components need it
+        raw: data,
+      };
+    },
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: 60 * 1000,
+  });
+};
+
 // ===================== MUTATIONS =====================
 
 export const useCreateOrder = () => {

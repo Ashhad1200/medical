@@ -78,6 +78,7 @@ const AddSupplierModal = ({
                 </label>
                 <input
                   type="text"
+                  required
                   value={newSupplier.contactPerson}
                   onChange={(e) =>
                     handleInputChange("contactPerson", e.target.value)
@@ -115,6 +116,7 @@ const AddSupplierModal = ({
                 </label>
                 <input
                   type="email"
+                  required
                   value={newSupplier.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -163,6 +165,7 @@ const AddSupplierModal = ({
                   Address
                 </label>
                 <textarea
+                  required
                   value={newSupplier.address}
                   onChange={(e) => handleInputChange("address", e.target.value)}
                   rows={3}
@@ -178,6 +181,7 @@ const AddSupplierModal = ({
                   </label>
                   <input
                     type="text"
+                    required
                     value={newSupplier.city}
                     onChange={(e) => handleInputChange("city", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -191,6 +195,7 @@ const AddSupplierModal = ({
                   </label>
                   <input
                     type="text"
+                    required
                     value={newSupplier.state}
                     onChange={(e) => handleInputChange("state", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -204,6 +209,7 @@ const AddSupplierModal = ({
                   </label>
                   <input
                     type="text"
+                    required
                     value={newSupplier.pincode}
                     onChange={(e) =>
                       handleInputChange("pincode", e.target.value)

@@ -14,6 +14,8 @@ import AddQuantityModal from "../components/Suppliers/AddQuantityModal";
 import SelectSupplierModal from "../components/Suppliers/SelectSupplierModal";
 import OrderReceiptModal from "../components/Suppliers/OrderReceiptModal";
 import SupplierOrderHistory from "../components/Suppliers/SupplierOrderHistory";
+import AddSupplierModal from "../components/Suppliers/AddSupplierModal";
+import { useCreateSupplier } from "../hooks/useSuppliers";
 
 const SuppliersPage = () => {
   // State management
@@ -36,6 +38,22 @@ const SuppliersPage = () => {
     expectedDate: "",
     notes: "",
   });
+
+  const [showAddSupplierModal, setShowAddSupplierModal] = useState(false);
+  const [newSupplier, setNewSupplier] = useState({
+    name: "",
+    contactPerson: "",
+    phone: "",
+    email: "",
+    website: "",
+    gstNumber: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+
+  const createSupplierMutation = useCreateSupplier();
 
   // Build API filters for medicines
   const filters = useMemo(() => {
@@ -175,6 +193,42 @@ const SuppliersPage = () => {
     setShowSupplierModal(true);
   };
 
+  // Finalize order -> create PO in backend
+  const finalizePurchaseOrder = async (supplier) => {
+    try {
+      const orderPayload = {
+        supplierId: supplier._id,
+        items: orderCart.map((item) => ({
+          medicineId: item.medicineId,
+          name: item.name,
+          manufacturer: item.manufacturer,
+          quantity: item.quantity,
+          unitPrice: item.tradePrice,
+          batchNumber: item.batchNumber || `BATCH-${Date.now()}`,
+          expiryDate:
+            item.expiryDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+          notes: item.notes || "",
+        })),
+        expectedDeliveryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        notes: `Stock order via UI (${orderCart.length} items)`,
+        taxPercent: 0,
+        discountAmount: 0,
+      };
+
+      const response = await createOrderMutation.mutateAsync(orderPayload);
+
+      queryClient.invalidateQueries({ queryKey: ["purchase-orders"] });
+
+      setSelectedSupplier(supplier);
+      setOrderData({ purchaseOrder: response.data.data.purchaseOrder });
+      setShowReceiptModal(true);
+      setShowSupplierModal(false);
+      handleClearCart();
+    } catch (error) {
+      console.error("Purchase order creation error:", error);
+    }
+  };
+
   const handleSupplierSelect = (supplier) => {
     setSelectedSupplier(supplier);
     setShowSupplierModal(false);
@@ -283,6 +337,37 @@ const SuppliersPage = () => {
     setCurrentPage(1);
   };
 
+  const handleAddSupplierSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await createSupplierMutation.mutateAsync({
+        ...newSupplier,
+        address: {
+          street: newSupplier.address,
+          city: newSupplier.city,
+          state: newSupplier.state,
+          country: "India",
+          postalCode: newSupplier.pincode,
+        },
+      });
+      setShowAddSupplierModal(false);
+      setNewSupplier({
+        name: "",
+        contactPerson: "",
+        phone: "",
+        email: "",
+        website: "",
+        gstNumber: "",
+        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+      });
+    } catch (error) {
+      // toast handled in hook
+    }
+  };
+
   // Error state
   if (error) {
     return (
@@ -330,25 +415,12 @@ const SuppliersPage = () => {
 
             {/* Order Summary & Actions */}
             <div className="flex items-center space-x-4">
-              {/* Order History Button */}
+              {/* Add Supplier Button */}
               <button
-                onClick={() => setShowOrderHistory(true)}
-                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                onClick={() => setShowAddSupplierModal(true)}
+                className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span>Inventory Orders</span>
+                <span>➕ Add Supplier</span>
               </button>
 
               {orderCart.length > 0 && (
@@ -451,6 +523,7 @@ const SuppliersPage = () => {
         onClose={() => setShowSupplierModal(false)}
         suppliers={suppliers}
         onSelect={handleSupplierSelect}
+        onFinalize={finalizePurchaseOrder}
         orderItems={orderCart}
       />
 
@@ -461,15 +534,21 @@ const SuppliersPage = () => {
         supplier={selectedSupplier}
         items={orderCart}
         total={calculateOrderTotal()}
-        onPrintComplete={() => {
-          setShowReceiptModal(false);
-          handleClearCart();
-        }}
+        autoPrint={true}
       />
 
       <SupplierOrderHistory
         show={showOrderHistory}
         onClose={() => setShowOrderHistory(false)}
+      />
+
+      <AddSupplierModal
+        show={showAddSupplierModal}
+        onClose={() => setShowAddSupplierModal(false)}
+        newSupplier={newSupplier}
+        setNewSupplier={setNewSupplier}
+        onSubmit={handleAddSupplierSubmit}
+        isLoading={createSupplierMutation.isLoading}
       />
     </div>
   );
