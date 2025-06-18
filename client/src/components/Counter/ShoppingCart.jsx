@@ -27,12 +27,15 @@ const ShoppingCart = ({
   }, [discountAmount, totals.subtotal]);
 
   const formatCurrency = (amount) => {
+    // Fallback to 0 when calculation results in NaN or invalid number
+    const safeAmount = isNaN(amount) || amount === undefined ? 0 : amount;
+
     return new Intl.NumberFormat("en-PK", {
       style: "currency",
       currency: "PKR",
       minimumFractionDigits: 2,
     })
-      .format(amount)
+      .format(safeAmount)
       .replace("PKR", "Rs.");
   };
 
@@ -173,34 +176,72 @@ const ShoppingCart = ({
                 <label className="block text-xs text-gray-700 mb-1">
                   Discount %
                 </label>
-                <input
-                  type="number"
-                  min="0"
-                  max="50"
-                  step="0.5"
-                  value={item.discountPercent || 0}
+                <select
+                  value={String(item.discountPercent || 0)}
                   onChange={(e) =>
                     handleDiscountChange(item.medicineId, e.target.value)
                   }
                   className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="0"
-                />
+                >
+                  <option value="0">0% - None</option>
+                  <option value="5">5%</option>
+                  <option value="7">7%</option>
+                  <option value="10">10%</option>
+                  <option value="12">12%</option>
+                  <option value="15">15%</option>
+                </select>
               </div>
             </div>
 
             {/* Item Total */}
             <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-600">Item Total:</span>
-                <span className="font-semibold text-gray-900">
-                  {formatCurrency(
-                    item.unitPrice * item.quantity -
-                      (item.unitPrice *
-                        item.quantity *
-                        (item.discountPercent || 0)) /
-                        100
-                  )}
-                </span>
+              <div className="space-y-1 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium">
+                    {formatCurrency(
+                      (item.unitPrice || 0) * (item.quantity || 1)
+                    )}
+                  </span>
+                </div>
+                {(item.discountPercent || 0) > 0 && (
+                  <div className="flex justify-between items-center text-red-600">
+                    <span>Discount ({item.discountPercent}%):</span>
+                    <span>
+                      -
+                      {formatCurrency(
+                        ((item.unitPrice || 0) *
+                          (item.quantity || 1) *
+                          (item.discountPercent || 0)) /
+                          100
+                      )}
+                    </span>
+                  </div>
+                )}
+                {(item.gstPerUnit || 0) > 0 && (
+                  <div className="flex justify-between items-center text-blue-600">
+                    <span>GST:</span>
+                    <span>
+                      +
+                      {formatCurrency(
+                        (item.gstPerUnit || 0) * (item.quantity || 1)
+                      )}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center font-semibold text-gray-900 pt-1 border-t border-gray-100">
+                  <span>Total:</span>
+                  <span>
+                    {formatCurrency(
+                      (item.unitPrice || 0) * (item.quantity || 1) -
+                        ((item.unitPrice || 0) *
+                          (item.quantity || 1) *
+                          (item.discountPercent || 0)) /
+                          100 +
+                        (item.gstPerUnit || 0) * (item.quantity || 1)
+                    )}
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -43,12 +43,15 @@ const MedicineSearchResults = ({
   };
 
   const formatCurrency = (amount) => {
+    // Safeguard against NaN values
+    const safeAmount = isNaN(amount) || amount === undefined ? 0 : amount;
+
     return new Intl.NumberFormat("en-PK", {
       style: "currency",
       currency: "PKR",
       minimumFractionDigits: 2,
     })
-      .format(amount)
+      .format(safeAmount)
       .replace("PKR", "Rs.");
   };
 
@@ -163,26 +166,54 @@ const MedicineSearchResults = ({
                 <div>
                   <span className="text-gray-500">Price:</span>
                   <span className="ml-1 font-semibold text-green-600">
-                    {formatCurrency(medicine.retailPrice)}
+                    {formatCurrency(medicine.sellingPrice || 0)}
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-500">Stock:</span>
                   <span className="ml-1 font-semibold">
-                    {medicine.quantity} units
+                    {medicine.quantity || 0} units
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-500">Batch:</span>
-                  <span className="ml-1">{medicine.batchNumber}</span>
+                  <span className="ml-1">{medicine.batchNumber || "N/A"}</span>
                 </div>
-                <div>
-                  <span className="text-gray-500">Expiry:</span>
-                  <span className="ml-1">
-                    {new Date(medicine.expiryDate).toLocaleDateString()}
-                  </span>
-                </div>
+                {(medicine.gstPerUnit || 0) > 0 ? (
+                  <div>
+                    <span className="text-gray-500">GST per unit:</span>
+                    <span className="ml-1 text-blue-600">
+                      {formatCurrency(medicine.gstPerUnit || 0)}
+                    </span>
+                  </div>
+                ) : (
+                  <div>
+                    <span className="text-gray-500">Expiry:</span>
+                    <span className="ml-1">
+                      {medicine.expiryDate
+                        ? new Date(medicine.expiryDate).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* Show total price including GST */}
+              {(medicine.gstPerUnit || 0) > 0 && (
+                <div className="mb-3 p-2 bg-blue-50 rounded text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      Total per unit (with GST):
+                    </span>
+                    <span className="font-semibold text-blue-700">
+                      {formatCurrency(
+                        (medicine.sellingPrice || 0) +
+                          (medicine.gstPerUnit || 0)
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Add to Cart Section */}
               <div className="flex items-center space-x-3">

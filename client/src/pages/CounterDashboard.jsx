@@ -91,9 +91,10 @@ const CounterDashboard = () => {
   // Calculate order totals (hide profit from counter staff)
   const orderTotals = useMemo(() => {
     const subtotal = cart.reduce((total, item) => {
-      const itemTotal = item.unitPrice * item.quantity;
+      const itemTotal = (item.unitPrice || 0) * (item.quantity || 1);
       const itemDiscount = (itemTotal * (item.discountPercent || 0)) / 100;
-      return total + (itemTotal - itemDiscount);
+      const itemGst = (item.gstPerUnit || 0) * (item.quantity || 1);
+      return total + (itemTotal - itemDiscount + itemGst);
     }, 0);
 
     const globalDiscount = Math.min(discountAmount, subtotal);
@@ -105,12 +106,14 @@ const CounterDashboard = () => {
     if (!isCounterStaff) {
       profit =
         cart.reduce((total, item) => {
-          const retailTotal = item.unitPrice * item.quantity;
+          const retailTotal = (item.unitPrice || 0) * (item.quantity || 1);
           const tradeTotal =
-            (item.tradePrice || item.unitPrice * 0.7) * item.quantity;
+            (item.tradePrice || (item.unitPrice || 0) * 0.7) *
+            (item.quantity || 1);
           const itemDiscount =
             (retailTotal * (item.discountPercent || 0)) / 100;
-          return total + (retailTotal - itemDiscount - tradeTotal);
+          const itemGst = (item.gstPerUnit || 0) * (item.quantity || 1);
+          return total + (retailTotal - itemDiscount + itemGst - tradeTotal);
         }, 0) - globalDiscount;
     }
 
@@ -119,7 +122,7 @@ const CounterDashboard = () => {
       globalDiscount: Math.round(globalDiscount * 100) / 100,
       grandTotal: Math.round(grandTotal * 100) / 100,
       profit: Math.round(profit * 100) / 100,
-      itemCount: cart.reduce((total, item) => total + item.quantity, 0),
+      itemCount: cart.reduce((total, item) => total + (item.quantity || 0), 0),
     };
   }, [cart, discountAmount, isCounterStaff]);
 
@@ -165,7 +168,7 @@ const CounterDashboard = () => {
     const cartItem = {
       medicineId: medicine._id,
       name: medicine.name,
-      unitPrice: medicine.retailPrice,
+      unitPrice: medicine.sellingPrice,
       tradePrice: medicine.tradePrice,
       quantity: quantity,
       discountPercent: discountPercent,

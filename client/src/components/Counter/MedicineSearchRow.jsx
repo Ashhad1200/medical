@@ -9,7 +9,7 @@ const MedicineSearchRow = ({ medicine, onAddToCart, isInCart }) => {
   const isLowStock = medicine.quantity <= 10;
 
   const calculateFinalPrice = () => {
-    const basePrice = medicine.retailPrice * quantity;
+    const basePrice = medicine.sellingPrice * quantity;
     const discountAmount = (basePrice * discountPercent) / 100;
     return basePrice - discountAmount;
   };
@@ -130,7 +130,7 @@ const MedicineSearchRow = ({ medicine, onAddToCart, isInCart }) => {
             {discountPercent > 0 && (
               <div className="text-xs text-gray-500">
                 <span className="line-through">
-                  Rs.{(medicine.retailPrice * quantity).toFixed(2)}
+                  Rs.{(medicine.sellingPrice * quantity).toFixed(2)}
                 </span>
                 <span className="text-red-600 ml-1">
                   ({discountPercent}% off)
@@ -138,7 +138,7 @@ const MedicineSearchRow = ({ medicine, onAddToCart, isInCart }) => {
               </div>
             )}
             <div className="text-xs text-gray-500">
-              Unit: Rs.{medicine.retailPrice.toFixed(2)}
+              Unit: Rs.{medicine.sellingPrice.toFixed(2)}
             </div>
           </div>
         </div>
