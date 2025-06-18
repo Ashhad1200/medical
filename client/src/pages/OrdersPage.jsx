@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import api from "../services/api";
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
@@ -22,21 +23,9 @@ const OrdersPage = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/orders?date=${selectedDate}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setOrders(data.data.orders);
-        setSummary(data.data.summary);
-      } else {
-        toast.error("Failed to fetch orders");
-      }
+      const response = await api.get(`/orders?date=${selectedDate}`);
+      setOrders(response.data.data.orders);
+      setSummary(response.data.data.summary);
     } catch (error) {
       toast.error("Error fetching orders");
       console.error("Error:", error);
@@ -53,21 +42,9 @@ const OrdersPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/orders/${orderId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSelectedOrder(data.data.order);
-        setShowOrderModal(true);
-      } else {
-        toast.error("Failed to fetch order details");
-      }
+      const response = await api.get(`/orders/${orderId}`);
+      setSelectedOrder(response.data.data.order);
+      setShowOrderModal(true);
     } catch (error) {
       toast.error("Error fetching order details");
       console.error("Order fetch error:", error);
@@ -82,40 +59,20 @@ const OrdersPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/orders/${orderId}/receipt`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await api.get(`/orders/${orderId}/receipt`, {
+        responseType: "blob",
       });
 
-      if (response.ok) {
-        // Check if response is PDF
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/pdf")) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `receipt-${orderId}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          toast.success("Receipt downloaded successfully");
-        } else {
-          // Fallback for non-PDF response
-          const data = await response.json();
-          if (data.success) {
-            toast.success(data.message || "Receipt generated successfully");
-          } else {
-            toast.error(data.message || "Failed to generate receipt");
-          }
-        }
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || "Failed to download receipt");
-      }
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receipt-${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success("Receipt downloaded successfully");
     } catch (error) {
       toast.error("Error downloading receipt");
       console.error("Receipt download error:", error);

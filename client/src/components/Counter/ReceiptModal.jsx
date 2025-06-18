@@ -1,5 +1,6 @@
 import React from "react";
 import { toast } from "react-hot-toast";
+import api from "../../services/api";
 
 const ReceiptModal = ({ show, onClose, orderId, orderData }) => {
   const formatCurrency = (amount) => {
@@ -63,43 +64,25 @@ const ReceiptModal = ({ show, onClose, orderId, orderData }) => {
     toast.success("Receipt downloaded successfully!");
   };
 
-  const downloadPDF = async () => {
-    if (!orderId || orderId === "undefined") {
-      toast.error("Invalid order ID for PDF download");
-      return;
-    }
+  const downloadReceipt = async () => {
+    if (!orderId) return;
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/orders/${orderId}/receipt`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await api.get(`/orders/${orderId}/receipt`, {
+        responseType: "blob",
       });
 
-      if (response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/pdf")) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = `receipt-${orderId}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          toast.success("PDF receipt downloaded successfully!");
-        } else {
-          toast.error("Failed to generate PDF receipt");
-        }
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || "Failed to download PDF receipt");
-      }
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `receipt-${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
-      toast.error("Error downloading PDF receipt");
-      console.error("PDF download error:", error);
+      console.error("Error downloading receipt:", error);
     }
   };
 
@@ -356,7 +339,7 @@ const ReceiptModal = ({ show, onClose, orderId, orderData }) => {
             </button>
 
             <button
-              onClick={downloadPDF}
+              onClick={downloadReceipt}
               className="flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
             >
               <svg

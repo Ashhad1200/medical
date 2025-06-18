@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-hot-toast";
+import api from "../services/api";
 
 const UsersPage = () => {
   const [users, setUsers] = useState([]);
@@ -51,20 +52,8 @@ const UsersPage = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data?.data?.users ?? []);
-      } else {
-        toast.error("Failed to fetch users");
-      }
+      const response = await api.get("/users");
+      setUsers(response.data?.data?.users ?? []);
     } catch (error) {
       toast.error("Error fetching users");
     } finally {
@@ -86,36 +75,24 @@ const UsersPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newUser),
+      await api.post("/users", newUser);
+      toast.success("User created successfully");
+      setShowAddModal(false);
+      setNewUser({
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        fullName: "",
+        phone: "",
+        role: "counter",
+        isActive: true,
       });
-
-      if (response.ok) {
-        toast.success("User created successfully");
-        setShowAddModal(false);
-        setNewUser({
-          username: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          fullName: "",
-          phone: "",
-          role: "counter",
-          isActive: true,
-        });
-        fetchUsers();
-      } else {
-        const error = await response.json();
-        toast.error(error?.message ?? "Failed to create user");
-      }
+      fetchUsers();
     } catch (error) {
-      toast.error("Error creating user");
+      const errorMessage =
+        error.response?.data?.message ?? "Failed to create user";
+      toast.error(errorMessage);
     }
   };
 
@@ -123,27 +100,15 @@ const UsersPage = () => {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/users/${selectedUser._id}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editUser),
-      });
-
-      if (response.ok) {
-        toast.success("User updated successfully");
-        setShowEditModal(false);
-        setSelectedUser(null);
-        fetchUsers();
-      } else {
-        const error = await response.json();
-        toast.error(error?.message ?? "Failed to update user");
-      }
+      await api.patch(`/users/${selectedUser._id}`, editUser);
+      toast.success("User updated successfully");
+      setShowEditModal(false);
+      setSelectedUser(null);
+      fetchUsers();
     } catch (error) {
-      toast.error("Error updating user");
+      const errorMessage =
+        error.response?.data?.message ?? "Failed to update user";
+      toast.error(errorMessage);
     }
   };
 
@@ -153,50 +118,27 @@ const UsersPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        toast.success("User deleted successfully");
-        fetchUsers();
-      } else {
-        const error = await response.json();
-        toast.error(error?.message ?? "Failed to delete user");
-      }
+      await api.delete(`/users/${userId}`);
+      toast.success("User deleted successfully");
+      fetchUsers();
     } catch (error) {
-      toast.error("Error deleting user");
+      const errorMessage =
+        error.response?.data?.message ?? "Failed to delete user";
+      toast.error(errorMessage);
     }
   };
 
   const handleToggleStatus = async (userId, currentStatus) => {
     try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ isActive: !currentStatus }),
-      });
-
-      if (response.ok) {
-        toast.success(
-          `User ${!currentStatus ? "activated" : "deactivated"} successfully`
-        );
-        fetchUsers();
-      } else {
-        const error = await response.json();
-        toast.error(error?.message ?? "Failed to update user status");
-      }
+      await api.patch(`/users/${userId}`, { isActive: !currentStatus });
+      toast.success(
+        `User ${!currentStatus ? "activated" : "deactivated"} successfully`
+      );
+      fetchUsers();
     } catch (error) {
-      toast.error("Error updating user status");
+      const errorMessage =
+        error.response?.data?.message ?? "Failed to update user status";
+      toast.error(errorMessage);
     }
   };
 

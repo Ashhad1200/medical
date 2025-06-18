@@ -30,10 +30,32 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Handle cases where server returns HTML instead of JSON
+    if (
+      error.response?.data &&
+      typeof error.response.data === "string" &&
+      error.response.data.includes("<!DOCTYPE")
+    ) {
+      console.error(
+        "Server returned HTML instead of JSON. Check API URL and server status."
+      );
+      error.message =
+        "Server error: Invalid response format. Please check your connection.";
+    }
+
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       window.location.href = "/login";
     }
+
+    // Log detailed error for debugging
+    console.error("API Error:", {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+
     return Promise.reject(error);
   }
 );
